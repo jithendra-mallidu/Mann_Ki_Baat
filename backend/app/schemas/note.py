@@ -21,6 +21,22 @@ class NoteResponse(BaseModel):
     date: str  # Formatted date string for frontend
     created_at: datetime
     updated_at: datetime
-    
+
+    class Config:
+        from_attributes = True
+
+
+class NoteSearchResult(BaseModel):
+    """Schema for search results with context."""
+    id: int
+    content: str
+    chapter_id: int
+    chapter_name: str
+    book_id: int
+    book_name: str
+    date: str
+    created_at: datetime
+    updated_at: datetime
+
     class Config:
         from_attributes = True

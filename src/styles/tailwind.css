@@ -2,3 +2,12 @@
 @source '../**/*.{js,ts,jsx,tsx}';
 
 @import 'tw-animate-css';
+
+/* Book hover styles */
+.group:hover .note-count {
+  display: none !important;
+}
+
+.group:hover .action-buttons {
+  display: flex !important;
+}

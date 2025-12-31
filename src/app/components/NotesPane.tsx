@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Plus, X, Pencil, Trash2 } from 'lucide-react';
+import { Plus, X, Pencil, Trash2, Search } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
@@ -27,6 +27,7 @@ interface NotesPaneProps {
   onDeleteNote: (noteId: string) => void;
   onAddTag: (name: string, color: string) => void;
   onRemoveTag: (tagId: string) => void;
+  onSearch?: () => void;
 }
 
 const TAG_COLORS = [
@@ -46,7 +47,8 @@ export function NotesPane({
   onEditNote,
   onDeleteNote,
   onAddTag,
-  onRemoveTag
+  onRemoveTag,
+  onSearch
 }: NotesPaneProps) {
   const [isAddingTag, setIsAddingTag] = useState(false);
   const [newTagName, setNewTagName] = useState('');
@@ -96,15 +98,26 @@ export function NotesPane({
     <div className="flex-1 bg-[#1a1a1a] h-screen flex flex-col">
       {/* Header with date */}
       <div className="p-4 border-b border-gray-800">
-        <h2 className="text-white/40 text-xs uppercase tracking-wide mb-0.5">
-          {new Date().toLocaleDateString('en-US', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric',
-            hour: 'numeric',
-            minute: 'numeric'
-          })}
-        </h2>
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="text-white/40 text-xs uppercase tracking-wide">
+            {new Date().toLocaleDateString('en-US', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
+              hour: 'numeric',
+              minute: 'numeric'
+            })}
+          </h2>
+          {onSearch && (
+            <button
+              onClick={onSearch}
+              className="p-1.5 text-white/40 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+              title="Search notes (Cmd+K)"
+            >
+              <Search className="w-4 h-4" />
+            </button>
+          )}
+        </div>
         <h1 className="text-white text-lg font-medium">
           {selectedChapterName || 'Select a chapter'}
         </h1>

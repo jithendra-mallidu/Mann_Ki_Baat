@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { Plus, Pencil, Trash2 } from 'lucide-react';
 import { ScrollArea } from './ui/scroll-area';
 
@@ -28,8 +27,6 @@ export function ChaptersPane({
   onDeleteChapter,
   selectedBookName
 }: ChaptersPaneProps) {
-  const [hoveredChapterId, setHoveredChapterId] = useState<string | null>(null);
-
   return (
     <div className="w-80 bg-[#1e1e1e] h-screen flex flex-col border-r border-gray-800">
       {/* Header */}
@@ -46,50 +43,46 @@ export function ChaptersPane({
               No chapters yet. Create one to get started.
             </div>
           ) : (
-            chapters.map((chapter) => (
-              <div
-                key={chapter.id}
-                className="relative"
-                onMouseEnter={() => setHoveredChapterId(chapter.id)}
-                onMouseLeave={() => setHoveredChapterId(null)}
-              >
-                <button
+            chapters.map((chapter) => {
+              const isSelected = selectedChapterId === chapter.id;
+              return (
+                <div
+                  key={chapter.id}
                   onClick={() => onSelectChapter(chapter.id)}
-                  className={`w-full p-4 rounded-lg text-left transition-colors relative group ${selectedChapterId === chapter.id
+                  className={`group w-full p-4 rounded-lg text-left transition-colors cursor-pointer flex items-start ${isSelected
                     ? 'bg-[#2d2d2d] border border-gray-700'
                     : 'bg-[#252525] hover:bg-[#2d2d2d] border border-transparent'
                     }`}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onSelectChapter(chapter.id); }}
                 >
-                  <div className="flex items-start justify-between pr-12">
-                    <div className="flex-1 min-w-0">
-                      <div className="text-white mb-1 truncate">{chapter.name}</div>
-                      <div className="text-white/40 text-xs">{chapter.date}</div>
-                    </div>
+                  {/* Chapter info - takes available space */}
+                  <div className="flex-1 min-w-0 pr-2">
+                    <div className="text-white mb-1 truncate" title={chapter.name}>{chapter.name}</div>
+                    <div className="text-white/40 text-xs">{chapter.date}</div>
                   </div>
 
-                  <div className="absolute right-2 top-4">
-                    {hoveredChapterId === chapter.id && (
-                      <div className="flex gap-1">
-                        <button
-                          onClick={(e) => { e.stopPropagation(); onEditChapter(chapter.id); }}
-                          className="p-1 rounded hover:bg-white/10 text-white/60 hover:text-white"
-                          title="Edit"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={(e) => { e.stopPropagation(); onDeleteChapter(chapter.id); }}
-                          className="p-1 rounded hover:bg-white/10 text-white/60 hover:text-red-400"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    )}
+                  {/* Action buttons - shown on hover */}
+                  <div className="flex-shrink-0 hidden group-hover:flex gap-1">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onEditChapter(chapter.id); }}
+                      className="p-1 rounded hover:bg-white/10 text-white/60 hover:text-white transition-colors"
+                      title="Edit"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDeleteChapter(chapter.id); }}
+                      className="p-1 rounded hover:bg-white/10 text-white/60 hover:text-red-400 transition-colors"
+                      title="Delete"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   </div>
-                </button>
-              </div>
-            ))
+                </div>
+              );
+            })
           )}
         </div>
       </ScrollArea>

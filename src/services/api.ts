@@ -35,6 +35,18 @@ export interface Note {
     updated_at: string;
 }
 
+export interface SearchResult {
+    id: number;
+    content: string;
+    chapter_id: number;
+    chapter_name: string;
+    book_id: number;
+    book_name: string;
+    date: string;
+    created_at: string;
+    updated_at: string;
+}
+
 export interface Tag {
     id: number;
     name: string;
@@ -203,6 +215,10 @@ export const notesApi = {
         return apiRequest<void>(`/api/notes/${id}`, {
             method: 'DELETE',
         });
+    },
+
+    search: async (query: string): Promise<SearchResult[]> => {
+        return apiRequest<SearchResult[]>(`/api/notes/search?q=${encodeURIComponent(query)}`);
     },
 };
 

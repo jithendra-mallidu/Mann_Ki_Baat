@@ -4,6 +4,7 @@ import { BooksPane, BookType } from './components/BooksPane';
 import { ChaptersPane, ChapterType } from './components/ChaptersPane';
 import { NotesPane, NoteType, TagType } from './components/NotesPane';
 import { InputModal } from './components/ui/input-modal';
+import { SearchModal } from './components/SearchModal';
 import {
   isAuthenticated,
   authApi,
@@ -62,6 +63,7 @@ export default function App() {
   const [editingBookId, setEditingBookId] = useState<string | null>(null);
   const [editingChapterId, setEditingChapterId] = useState<string | null>(null);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   // Check authentication on mount
   useEffect(() => {
@@ -77,6 +79,19 @@ export default function App() {
       setIsLoading(false);
     };
     checkAuth();
+  }, []);
+
+  // Keyboard shortcut for search (Cmd+K or Ctrl+K)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setIsSearchOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   // Load books when logged in
@@ -319,6 +334,23 @@ export default function App() {
     }
   };
 
+  // Search handler
+  const handleSelectSearchResult = async (bookId: number, chapterId: number) => {
+    // Navigate to the selected book and chapter
+    setSelectedBookId(String(bookId));
+    setSelectedChapterId(String(chapterId));
+
+    // Load chapters if not already loaded for this book
+    if (selectedBookId !== String(bookId)) {
+      await loadChapters(bookId);
+    }
+
+    // Load notes for the selected chapter
+    if (selectedChapterId !== String(chapterId)) {
+      await loadNotes(chapterId);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#1a1a1a]">
@@ -366,6 +398,7 @@ export default function App() {
           onDeleteNote={handleDeleteNote}
           onAddTag={handleAddTag}
           onRemoveTag={handleRemoveTag}
+          onSearch={() => setIsSearchOpen(true)}
         />
       </div>
 
@@ -409,6 +442,13 @@ export default function App() {
         placeholder="Enter chapter name..."
         submitText="Save"
         initialValue={chapters.find(c => c.id === editingChapterId)?.name || ''}
+      />
+
+      {/* Search Modal */}
+      <SearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onSelectNote={handleSelectSearchResult}
       />
     </>
   );
