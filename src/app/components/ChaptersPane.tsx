@@ -61,8 +61,8 @@ export function ChaptersPane({
                     }`}
                 >
                   <div className="flex items-start justify-between pr-12">
-                    <div className="flex-1">
-                      <div className="text-white mb-1">{chapter.name}</div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white mb-1 truncate">{chapter.name}</div>
                       <div className="text-white/40 text-xs">{chapter.date}</div>
                     </div>
                   </div>

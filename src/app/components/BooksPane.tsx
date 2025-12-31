@@ -60,7 +60,7 @@ export function BooksPane({ books, selectedBookId, onSelectBook, onAddBook, onEd
                   }`}
               >
                 <Book className="w-4 h-4 flex-shrink-0" />
-                <div className="flex-1 text-left pr-12">
+                <div className="flex-1 text-left pr-12 min-w-0">
                   <div className="text-sm truncate">{book.name}</div>
                 </div>
 
