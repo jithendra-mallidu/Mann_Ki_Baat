@@ -45,7 +45,7 @@ const toTagType = (tag: Tag): TagType => ({
 });
 
 // Modal types
-type ModalType = 'book' | 'chapter' | null;
+type ModalType = 'book' | 'chapter' | 'editBook' | 'editChapter' | null;
 
 export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
@@ -59,6 +59,9 @@ export default function App() {
 
   // Modal state
   const [activeModal, setActiveModal] = useState<ModalType>(null);
+  const [editingBookId, setEditingBookId] = useState<string | null>(null);
+  const [editingChapterId, setEditingChapterId] = useState<string | null>(null);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
 
   // Check authentication on mount
   useEffect(() => {
@@ -168,6 +171,7 @@ export default function App() {
   const handleOpenBookModal = () => setActiveModal('book');
   const handleOpenChapterModal = () => {
     if (!selectedBookId) {
+      alert('Please create and select a book first before adding chapters.');
       return;
     }
     setActiveModal('chapter');
@@ -198,6 +202,7 @@ export default function App() {
 
   const handleAddNote = async (content: string, _date: string) => {
     if (!selectedChapterId) {
+      alert('Please create and select a chapter first before adding notes.');
       return;
     }
     try {
@@ -227,6 +232,93 @@ export default function App() {
     }
   };
 
+  // Edit handlers
+  const handleOpenEditBookModal = (bookId: string) => {
+    setEditingBookId(bookId);
+    setActiveModal('editBook');
+  };
+
+  const handleOpenEditChapterModal = (chapterId: string) => {
+    setEditingChapterId(chapterId);
+    setActiveModal('editChapter');
+  };
+
+  const handleEditBook = async (newName: string) => {
+    if (!editingBookId) return;
+    try {
+      const updatedBook = await booksApi.update(Number(editingBookId), newName);
+      setBooks(prev => prev.map(book =>
+        book.id === editingBookId ? toBookType(updatedBook) : book
+      ));
+      setEditingBookId(null);
+    } catch (error) {
+      console.error('Failed to update book:', error);
+    }
+  };
+
+  const handleEditChapter = async (newName: string) => {
+    if (!editingChapterId) return;
+    try {
+      const updatedChapter = await chaptersApi.update(Number(editingChapterId), newName);
+      setChapters(prev => prev.map(chapter =>
+        chapter.id === editingChapterId ? toChapterType(updatedChapter) : chapter
+      ));
+      setEditingChapterId(null);
+    } catch (error) {
+      console.error('Failed to update chapter:', error);
+    }
+  };
+
+  const handleEditNote = async (noteId: string, newContent: string) => {
+    try {
+      const updatedNote = await notesApi.update(Number(noteId), newContent);
+      setNotes(prev => prev.map(note =>
+        note.id === noteId ? toNoteType(updatedNote) : note
+      ));
+    } catch (error) {
+      console.error('Failed to update note:', error);
+    }
+  };
+
+  // Delete handlers
+  const handleDeleteBook = async (bookId: string) => {
+    if (!confirm('Are you sure you want to delete this book? All chapters and notes will be deleted.')) return;
+    try {
+      await booksApi.delete(Number(bookId));
+      setBooks(prev => prev.filter(book => book.id !== bookId));
+      if (selectedBookId === bookId) {
+        setSelectedBookId(null);
+      }
+    } catch (error) {
+      console.error('Failed to delete book:', error);
+    }
+  };
+
+  const handleDeleteChapter = async (chapterId: string) => {
+    if (!confirm('Are you sure you want to delete this chapter? All notes will be deleted.')) return;
+    try {
+      await chaptersApi.delete(Number(chapterId));
+      setChapters(prev => prev.filter(chapter => chapter.id !== chapterId));
+      if (selectedChapterId === chapterId) {
+        setSelectedChapterId(null);
+      }
+      loadBooks(); // Refresh note counts
+    } catch (error) {
+      console.error('Failed to delete chapter:', error);
+    }
+  };
+
+  const handleDeleteNote = async (noteId: string) => {
+    if (!confirm('Are you sure you want to delete this note?')) return;
+    try {
+      await notesApi.delete(Number(noteId));
+      setNotes(prev => prev.filter(note => note.id !== noteId));
+      loadBooks(); // Refresh note counts
+    } catch (error) {
+      console.error('Failed to delete note:', error);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center bg-[#1a1a1a]">
@@ -252,6 +344,8 @@ export default function App() {
           selectedBookId={selectedBookId}
           onSelectBook={setSelectedBookId}
           onAddBook={handleOpenBookModal}
+          onEditBook={handleOpenEditBookModal}
+          onDeleteBook={handleDeleteBook}
           onLogout={handleLogout}
         />
         <ChaptersPane
@@ -259,6 +353,8 @@ export default function App() {
           selectedChapterId={selectedChapterId}
           onSelectChapter={setSelectedChapterId}
           onAddChapter={handleOpenChapterModal}
+          onEditChapter={handleOpenEditChapterModal}
+          onDeleteChapter={handleDeleteChapter}
           selectedBookName={selectedBook?.name || ''}
         />
         <NotesPane
@@ -266,6 +362,8 @@ export default function App() {
           tags={tags}
           selectedChapterName={selectedChapter?.name || ''}
           onAddNote={handleAddNote}
+          onEditNote={handleEditNote}
+          onDeleteNote={handleDeleteNote}
           onAddTag={handleAddTag}
           onRemoveTag={handleRemoveTag}
         />
@@ -289,6 +387,28 @@ export default function App() {
         title="Create New Chapter"
         placeholder="Enter chapter name..."
         submitText="Create Chapter"
+      />
+
+      {/* Edit Book Modal */}
+      <InputModal
+        isOpen={activeModal === 'editBook'}
+        onClose={() => { handleCloseModal(); setEditingBookId(null); }}
+        onSubmit={handleEditBook}
+        title="Edit Book"
+        placeholder="Enter book name..."
+        submitText="Save"
+        initialValue={books.find(b => b.id === editingBookId)?.name || ''}
+      />
+
+      {/* Edit Chapter Modal */}
+      <InputModal
+        isOpen={activeModal === 'editChapter'}
+        onClose={() => { handleCloseModal(); setEditingChapterId(null); }}
+        onSubmit={handleEditChapter}
+        title="Edit Chapter"
+        placeholder="Enter chapter name..."
+        submitText="Save"
+        initialValue={chapters.find(c => c.id === editingChapterId)?.name || ''}
       />
     </>
   );

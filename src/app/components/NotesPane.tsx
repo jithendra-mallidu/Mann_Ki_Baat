@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Plus, X } from 'lucide-react';
+import { Plus, X, Pencil, Trash2 } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { ScrollArea } from './ui/scroll-area';
-import { Textarea } from './ui/textarea';
+import { NoteEditorModal } from './ui/NoteEditorModal';
 
 export interface NoteType {
   id: string;
@@ -23,6 +23,8 @@ interface NotesPaneProps {
   tags: TagType[];
   selectedChapterName: string;
   onAddNote: (content: string, date: string) => void;
+  onEditNote: (noteId: string, content: string) => void;
+  onDeleteNote: (noteId: string) => void;
   onAddTag: (name: string, color: string) => void;
   onRemoveTag: (tagId: string) => void;
 }
@@ -41,26 +43,45 @@ export function NotesPane({
   tags,
   selectedChapterName,
   onAddNote,
+  onEditNote,
+  onDeleteNote,
   onAddTag,
   onRemoveTag
 }: NotesPaneProps) {
-  const [newNoteContent, setNewNoteContent] = useState('');
   const [isAddingTag, setIsAddingTag] = useState(false);
   const [newTagName, setNewTagName] = useState('');
   const [selectedColor, setSelectedColor] = useState(TAG_COLORS[0].class);
   const [hoveredNoteId, setHoveredNoteId] = useState<string | null>(null);
+  const [isEditorModalOpen, setIsEditorModalOpen] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
 
-  const handleAddNote = () => {
-    if (newNoteContent.trim()) {
+  const handleAddNoteFromModal = (content: string) => {
+    if (content.trim()) {
       const today = new Date();
       const dateStr = today.toLocaleDateString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric'
       });
-      onAddNote(newNoteContent, dateStr);
-      setNewNoteContent('');
+      onAddNote(content, dateStr);
     }
+  };
+
+  const handleEditNoteFromModal = (content: string) => {
+    if (content.trim() && editingNoteId) {
+      onEditNote(editingNoteId, content);
+      setEditingNoteId(null);
+    }
+  };
+
+  const openEditModal = (noteId: string) => {
+    setEditingNoteId(noteId);
+    setIsEditorModalOpen(true);
+  };
+
+  const closeEditorModal = () => {
+    setIsEditorModalOpen(false);
+    setEditingNoteId(null);
   };
 
   const handleAddTag = () => {
@@ -158,37 +179,19 @@ export function NotesPane({
         </div>
       </div>
 
-      {/* Notes Timeline */}
-      <ScrollArea className="flex-1 p-6">
-        <div className="max-w-3xl">
-          {/* New Note Input */}
-          <div className="mb-6">
-            <div className="bg-[#252525] rounded-lg p-4 border border-gray-800">
-              <div className="text-white/60 text-sm mb-3">
-                {new Date().toLocaleDateString('en-US', {
-                  month: 'short',
-                  day: 'numeric',
-                  year: 'numeric'
-                })}
-              </div>
-              <Textarea
-                placeholder="Write your notes here..."
-                value={newNoteContent}
-                onChange={(e) => setNewNoteContent(e.target.value)}
-                className="bg-[#1a1a1a] border-gray-700 text-white min-h-[120px] resize-none"
-              />
-              <div className="mt-3 flex justify-end">
-                <Button
-                  onClick={handleAddNote}
-                  disabled={!newNoteContent.trim()}
-                  className="bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  Add Note
-                </Button>
-              </div>
-            </div>
-          </div>
 
+
+      {/* Note Editor Modal */}
+      <NoteEditorModal
+        isOpen={isEditorModalOpen}
+        onClose={closeEditorModal}
+        onSubmit={editingNoteId ? handleEditNoteFromModal : handleAddNoteFromModal}
+        initialContent={editingNoteId ? notes.find(n => n.id === editingNoteId)?.content || '' : ''}
+      />
+
+      {/* Scrollable Notes Timeline */}
+      <ScrollArea className="flex-1 overflow-y-auto p-6">
+        <div className="max-w-3xl mx-auto">
           {/* Timeline with vertical line */}
           <div className="relative pl-8 space-y-6">
             {/* Vertical Timeline Line */}
@@ -202,7 +205,7 @@ export function NotesPane({
               notes.map((note) => (
                 <div
                   key={note.id}
-                  className="relative"
+                  className={`relative ${hoveredNoteId === note.id ? 'z-10' : 'z-0'}`}
                   onMouseEnter={() => setHoveredNoteId(note.id)}
                   onMouseLeave={() => setHoveredNoteId(null)}
                 >
@@ -211,22 +214,47 @@ export function NotesPane({
 
                   {/* Note Card */}
                   <div
-                    className={`bg-[#252525] rounded-lg p-4 border border-gray-800 transition-all duration-200 ${hoveredNoteId === note.id ? 'shadow-lg shadow-blue-500/20' : ''
+                    className={`bg-[#252525] rounded-lg p-4 border border-gray-800 transition-all duration-200 ${hoveredNoteId === note.id ? 'shadow-lg shadow-blue-500/20 ring-1 ring-blue-500/30' : ''
                       }`}
                   >
                     <div className="flex items-center justify-between mb-3">
                       <div className="text-blue-400 text-sm">{note.date}</div>
+                      {hoveredNoteId === note.id && (
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => openEditModal(note.id)}
+                            className="p-1 rounded hover:bg-white/10 text-white/60 hover:text-white"
+                            title="Edit"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => onDeleteNote(note.id)}
+                            className="p-1 rounded hover:bg-white/10 text-white/60 hover:text-red-400"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     {/* Note Content - Expand on Hover */}
-                    <div
-                      className={`text-white/80 text-sm overflow-hidden transition-all duration-300 ${hoveredNoteId === note.id
-                        ? 'max-h-[1000px]'
-                        : 'max-h-20 line-clamp-3'
-                        }`}
-                    >
-                      <pre className="whitespace-pre-wrap font-sans">{note.content}</pre>
-                    </div>
+                    {hoveredNoteId === note.id ? (
+                      <div className="text-white/80 text-sm max-h-[300px] overflow-y-auto">
+                        <div
+                          className="prose prose-invert prose-sm max-w-none"
+                          dangerouslySetInnerHTML={{ __html: note.content }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="text-white/80 text-sm max-h-20 overflow-hidden">
+                        <div
+                          className="line-clamp-3"
+                          dangerouslySetInnerHTML={{ __html: note.content.replace(/<[^>]*>/g, ' ').substring(0, 200) }}
+                        />
+                      </div>
+                    )}
 
                     {hoveredNoteId !== note.id && note.content.length > 150 && (
                       <div className="text-white/40 text-xs mt-2 italic">
@@ -240,6 +268,17 @@ export function NotesPane({
           </div>
         </div>
       </ScrollArea>
+
+      {/* Footer Button */}
+      <div className="p-4 border-t border-gray-800">
+        <button
+          onClick={() => setIsEditorModalOpen(true)}
+          className="w-full flex items-center justify-center gap-1 py-2.5 px-4 rounded-lg border border-white/20 text-white hover:bg-white/10 transition-colors"
+        >
+          <Plus className="w-2.5 h-2.5 stroke-[2.5]" />
+          <span className="text-sm">New Note</span>
+        </button>
+      </div>
     </div>
   );
 }
