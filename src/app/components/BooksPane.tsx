@@ -54,40 +54,43 @@ export function BooksPane({ books, selectedBookId, onSelectBook, onAddBook, onEd
             >
               <button
                 onClick={() => onSelectBook(book.id)}
-                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors ${selectedBookId === book.id
+                className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors relative group ${selectedBookId === book.id
                   ? 'bg-[#e9b44c] text-[#2d2a2e]'
                   : 'text-white/80 hover:bg-white/10'
                   }`}
               >
                 <Book className="w-4 h-4 flex-shrink-0" />
-                <div className="flex-1 text-left">
+                <div className="flex-1 text-left pr-12">
                   <div className="text-sm truncate">{book.name}</div>
                 </div>
-                {hoveredBookId === book.id ? (
-                  <div className="flex gap-1">
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onEditBook(book.id); }}
-                      className={`p-1 rounded hover:bg-black/20 ${selectedBookId === book.id ? 'text-[#2d2a2e]' : 'text-white/60 hover:text-white'}`}
-                      title="Edit"
-                    >
-                      <Pencil className="w-3 h-3" />
-                    </button>
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onDeleteBook(book.id); }}
-                      className={`p-1 rounded hover:bg-black/20 ${selectedBookId === book.id ? 'text-[#2d2a2e]' : 'text-white/60 hover:text-red-400'}`}
-                      title="Delete"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className={`text-xs px-2 py-0.5 rounded ${selectedBookId === book.id
-                    ? 'bg-[#2d2a2e] text-white'
-                    : 'bg-white/10 text-white/60'
-                    }`}>
-                    {book.noteCount}
-                  </div>
-                )}
+
+                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                  {hoveredBookId === book.id ? (
+                    <div className="flex gap-1">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onEditBook(book.id); }}
+                        className={`p-1 rounded hover:bg-black/10 ${selectedBookId === book.id ? 'text-[#2d2a2e]' : 'text-white/60 hover:text-white'}`}
+                        title="Edit"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onDeleteBook(book.id); }}
+                        className={`p-1 rounded hover:bg-black/10 ${selectedBookId === book.id ? 'text-[#2d2a2e]' : 'text-white/60 hover:text-red-400'}`}
+                        title="Delete"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className={`text-xs px-2 py-0.5 rounded ${selectedBookId === book.id
+                      ? 'bg-[#2d2a2e] text-white'
+                      : 'bg-white/10 text-white/60'
+                      }`}>
+                      {book.noteCount}
+                    </div>
+                  )}
+                </div>
               </button>
             </div>
           ))}

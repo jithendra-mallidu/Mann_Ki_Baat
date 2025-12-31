@@ -55,31 +55,34 @@ export function ChaptersPane({
               >
                 <button
                   onClick={() => onSelectChapter(chapter.id)}
-                  className={`w-full p-4 rounded-lg text-left transition-colors ${selectedChapterId === chapter.id
+                  className={`w-full p-4 rounded-lg text-left transition-colors relative group ${selectedChapterId === chapter.id
                     ? 'bg-[#2d2d2d] border border-gray-700'
                     : 'bg-[#252525] hover:bg-[#2d2d2d] border border-transparent'
                     }`}
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex items-start justify-between pr-12">
                     <div className="flex-1">
                       <div className="text-white mb-1">{chapter.name}</div>
                       <div className="text-white/40 text-xs">{chapter.date}</div>
                     </div>
+                  </div>
+
+                  <div className="absolute right-2 top-4">
                     {hoveredChapterId === chapter.id && (
-                      <div className="flex gap-1 ml-2">
+                      <div className="flex gap-1">
                         <button
                           onClick={(e) => { e.stopPropagation(); onEditChapter(chapter.id); }}
                           className="p-1 rounded hover:bg-white/10 text-white/60 hover:text-white"
                           title="Edit"
                         >
-                          <Pencil className="w-3 h-3" />
+                          <Pencil className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={(e) => { e.stopPropagation(); onDeleteChapter(chapter.id); }}
                           className="p-1 rounded hover:bg-white/10 text-white/60 hover:text-red-400"
                           title="Delete"
                         >
-                          <Trash2 className="w-3 h-3" />
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
                     )}
