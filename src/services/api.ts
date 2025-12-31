@@ -135,6 +135,20 @@ export const authApi = {
     getCurrentUser: async (): Promise<User> => {
         return apiRequest<User>('/api/auth/me');
     },
+
+    forgotPassword: async (email: string): Promise<{ message: string; reset_token?: string }> => {
+        return apiRequest<{ message: string; reset_token?: string }>('/api/auth/forgot-password', {
+            method: 'POST',
+            body: JSON.stringify({ email }),
+        });
+    },
+
+    resetPassword: async (token: string, new_password: string): Promise<{ message: string }> => {
+        return apiRequest<{ message: string }>('/api/auth/reset-password', {
+            method: 'POST',
+            body: JSON.stringify({ token, new_password }),
+        });
+    },
 };
 
 // Books API

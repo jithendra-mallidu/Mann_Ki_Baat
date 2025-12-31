@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Eye, EyeOff } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
+import { ForgotPasswordModal } from './ForgotPasswordModal';
 import { authApi } from '../../services/api';
 
 interface LoginPageProps {
@@ -16,6 +17,7 @@ export function LoginPage({ onLogin }: LoginPageProps) {
   const [isSignUp, setIsSignUp] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -35,6 +37,15 @@ export function LoginPage({ onLogin }: LoginPageProps) {
       setError(err instanceof Error ? err.message : 'Authentication failed');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async (email: string) => {
+    const response = await authApi.forgotPassword(email);
+    // In development mode, the token will be returned in the response
+    if (response.reset_token) {
+      console.log('Password reset token (dev mode):', response.reset_token);
+      console.log('Reset URL (dev mode):', `${window.location.origin}/reset-password?token=${response.reset_token}`);
     }
   };
 
@@ -149,7 +160,11 @@ export function LoginPage({ onLogin }: LoginPageProps) {
 
               {!isSignUp && (
                 <div className="text-right">
-                  <button type="button" className="text-sm text-orange-500 hover:text-orange-600">
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
+                    className="text-sm text-orange-500 hover:text-orange-600"
+                  >
                     Forgot password?
                   </button>
                 </div>
@@ -170,6 +185,13 @@ export function LoginPage({ onLogin }: LoginPageProps) {
           </div>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      <ForgotPasswordModal
+        isOpen={showForgotPassword}
+        onClose={() => setShowForgotPassword(false)}
+        onSubmit={handleForgotPassword}
+      />
     </div>
   );
 }

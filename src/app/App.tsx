@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { LoginPage } from './components/LoginPage';
+import { ResetPasswordPage } from './components/ResetPasswordPage';
 import { BooksPane, BookType } from './components/BooksPane';
 import { ChaptersPane, ChapterType } from './components/ChaptersPane';
 import { NotesPane, NoteType, TagType } from './components/NotesPane';
@@ -64,6 +65,17 @@ export default function App() {
   const [editingChapterId, setEditingChapterId] = useState<string | null>(null);
   const [editingNoteId, setEditingNoteId] = useState<string | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+
+  // Check for reset password token in URL
+  const [resetToken, setResetToken] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (token) {
+      setResetToken(token);
+    }
+  }, []);
 
   // Check authentication on mount
   useEffect(() => {
@@ -356,6 +368,23 @@ export default function App() {
       <div className="flex h-screen items-center justify-center bg-[#1a1a1a]">
         <div className="text-white text-xl">Loading...</div>
       </div>
+    );
+  }
+
+  // Show reset password page if there's a token in the URL
+  if (resetToken) {
+    return (
+      <ResetPasswordPage
+        token={resetToken}
+        onSuccess={() => {
+          setResetToken(null);
+          window.history.pushState({}, '', window.location.pathname);
+        }}
+        onCancel={() => {
+          setResetToken(null);
+          window.history.pushState({}, '', window.location.pathname);
+        }}
+      />
     );
   }
 
